@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+	<meta charset=utf-8>
+	<title>Space Base Map</title>	
+	
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link rel="apple-touch-icon" href="images/icon.png" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<style>
+		body {
+			margin: auto;
+			max-width: 1280px;
+		}
+		
+		@font-face {
+			font-family: "Spartakus";
+			src: url('Fonts/Spartakus.ttf') format('truetype');
+			src: local('☺'), 
+				url('Fonts/Spartakus.woff') format('woff');
+		}
+		
+		#container {
+			position: relative;
+			float: center;
+		}
+
+		#canvas {
+			padding-left: 0;
+			padding-right: 0;
+			margin: auto;
+			display: block;
+			position: absolute;
+			top: 0px;
+			left: 0px;
+		}
+		
+		#loader {
+			padding: 9px;
+			margin: auto;
+			display: block;
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			background: rgba(1, 128, 128, 0.5);
+			border-style: solid;
+			border-width: 3px;
+			border-color: rgb(1, 255, 255);
+			color: rgb(1, 255, 255);
+			font-family:"Spartakus";
+			font-size: 12px;
+		}
+		
+		
+	</style>
+</head>
+
+<body>
+	<div id="container">
+		<canvas id="canvas"></canvas>
+		<textarea id="loader" style="visibility:hidden; opacity:0;"></textarea>
+	</div>
+	<script src="Source/Engine/GraphicEngine.js"></script>
+	<script src="Source/Engine/InputEngine.js"></script>
+	<script src="Source/Engine/ParticleEngine.js"></script>
+	<script src="Source/Engine/StateEngine.js"></script>
+	
+	<script src="Source/ActionPhase/Map.js"></script>
+	
+	<script src="Source/UI/GlassPanel.js"></script>
+	<script src="Source/UI/GlassBar.js"></script>
+	<script src="Source/UI/GlassButton.js"></script>
+	<script src="Source/UI/IconButton.js"></script>
+	
+	<script>
+		var ROOT_FOLDER = "";
+		var COCOON_JS = false;
+		var AUDIO_ENABLE = false;
+		
+		var CANVAS_W = 1280;
+		var CANVAS_H = 720;
+		
+		var TEXT_WIDTH = 375;
+		var TEXT_HEIGHT = 550;
+		var TEXT_LEFT = 840;
+		var TEXT_TOP = 50;
+	
+		
+		function ShowButton () {
+			
+		}
+		
+		function HideButton () {
+			
+		}
+		
+		var g_canvas           = null;
+		var g_context          = null;
+		var g_graphicEngine    = null;
+		var g_particleEngine   = null;
+		var g_inputEngine      = null;
+		var g_stateEngine      = null;
+		
+		var g_textArea = document.getElementById("loader");
+
+		function ResizeCanvas () {
+			var windowW = 0;
+			var windowH = 0;
+			var canvasW = 0;
+			var canvasH = 0;
+			var touchScale = 0;
+			
+			if (window.innerWidth) windowW = window.innerWidth;
+			else if (document.documentElement && document.documentElement.clientWidth) windowW = document.documentElement.clientWidth;
+			else if (document.body)	windowW = document.body.clientWidth;
+
+			if (window.innerHeight) windowH = window.innerHeight;
+			else if (document.documentElement && document.documentElement.clientHeight) windowH = document.documentElement.clientHeight;
+			else if (document.body) windowH = document.body.clientHeight;
+			
+			canvasH = (windowH < windowW * (CANVAS_H / CANVAS_W))? windowH : ((windowW * (CANVAS_H / CANVAS_W) + 0.5) >> 0);
+			canvasW = (canvasH * (CANVAS_W / CANVAS_H) + 0.5) >> 0;
+			
+			if (canvasW > CANVAS_W) {
+				canvasW = CANVAS_W;
+				canvasH = CANVAS_H;
+			}
+			
+			g_canvas.style.width  = canvasW + "px";
+			g_canvas.style.height = canvasH + "px";
+			
+			touchScale = 1 / (canvasW / CANVAS_W);
+			
+			if (g_inputEngine) g_inputEngine.SetMouseScale (touchScale);
+			
+			
+			
+			
+			ratio = (canvasW / 1280);
+			
+			var textOffsetX = ((TEXT_WIDTH * ratio) - TEXT_WIDTH) / 2;
+			var textOffsetY = ((TEXT_HEIGHT * ratio) - TEXT_HEIGHT) / 2;
+			
+			g_textArea.style.webkitTransform = "scale(" + ratio + "," + ratio + ")";
+			g_textArea.style.MozTransform    = "scale(" + ratio + "," + ratio + ")";
+			g_textArea.style.transform       = "scale(" + ratio + "," + ratio + ")";
+			
+			g_textArea.style.left = (TEXT_LEFT * ratio + textOffsetX) + "px";
+			g_textArea.style.top = (TEXT_TOP * ratio + textOffsetY) + "px";
+			g_textArea.style.width = TEXT_WIDTH + "px";
+			g_textArea.style.height = TEXT_HEIGHT + "px";
+		}
+
+		
+		g_graphicEngine  = new GraphicEngine();
+		g_particleEngine = new ParticleEngine();
+		g_inputEngine    = new InputEngine();
+		g_stateEngine    = new StateEngine();
+		
+		g_canvas = document.getElementById("canvas");
+		g_context = g_canvas.getContext("2d");
+		g_canvas.width  = CANVAS_W;
+		g_canvas.height = CANVAS_H;
+		//document.body.appendChild (g_canvas);
+		
+		g_inputEngine.AddEventListener (g_canvas);
+		g_stateEngine.SetContext(g_context, g_graphicEngine);
+		g_particleEngine.SetContext(g_context, g_graphicEngine);
+		
+		
+		ResizeCanvas();
+		window.onresize = ResizeCanvas;
+		
+		g_stateEngine.Start();
+		
+		var BATTLE_FIELD_SIZE_W = 2000;
+		var BATTLE_FIELD_SIZE_H = 1200;
+		var BATTLE_FIELD_BLOCK_SIZE = 50;
+		
+		function GSCreate () {
+			var backGroundImage = g_graphicEngine.LoadImage("Image/ActionPhase/Background/1.jpg");
+			var selectorImage = g_graphicEngine.LoadImage("Image/MapEditor/Selector.png");
+			
+			var selecting = 0;
+			var textAlpha = 0;
+			var textShow = false;
+			
+			var mainMenuX = -210;
+			var mainMenuPanel = new GlassPanel();
+			var exportButton = new GlassButton();
+			var textMenuPanel = new GlassPanel();
+			var closeTextButton = new GlassButton();
+			var importTextButton = new GlassButton();
+			
+			var selectButton = new Array();
+			for (var i=0; i<15; i++) {
+				selectButton[i] = new IconButton();
+			}
+			
+			var camera = new CameraPosition(0, 0, CANVAS_W, CANVAS_H);			
+			var map = new Map(BATTLE_FIELD_SIZE_W, BATTLE_FIELD_SIZE_H);
+			map.SetCamera(camera);
+			
+			var init = false;
+			var mousePressing = false;
+			var anchorMouseX = 0;
+			var anchorMouseY = 0;
+			var anchorCameraX = 0;
+			var anchorCameraY = 0;
+			
+			
+			this.Zoom = function (amount) {
+				var tempW = camera.w;
+				var tempH = camera.h;
+				
+				tempW += amount;
+				if (tempW < CANVAS_W) {
+					tempW = CANVAS_W;
+				}
+				else if (tempW > BATTLE_FIELD_SIZE_W) {
+					tempW = BATTLE_FIELD_SIZE_W;
+				}
+				tempH = (tempW / CANVAS_W) * CANVAS_H;
+				
+				camera.x -= (tempW - camera.w) / 2;
+				camera.y -= (tempH - camera.h) / 2;
+				
+				camera.w = tempW;
+				camera.h = tempH;
+				
+				map.SetCamera(camera);
+			}
+			
+			
+			this.Update = function (deltaTime) {
+				if (init == false && g_graphicEngine.GetLoadingProgress() == 1) {
+					init = true;
+					mainMenuPanel.Init (mainMenuX, -20, 220, 760);
+					exportButton.Init (mainMenuX + 25, 660, "Export", Export);
+					
+					textMenuPanel.Init (800, 10, 480, 700);
+					closeTextButton.Init (1090, 630, "Close", CloseText);
+					importTextButton.Init (840, 630, "Import", Import);
+					textMenuPanel.SetAlpha(0);
+					closeTextButton.SetAlpha(0);
+					importTextButton.SetAlpha(0);
+					
+					selectButton[0].Init (mainMenuX + 30, 40, SelectIconCallback, 0);
+					selectButton[0].SetIcon ("Image/MapEditor/Cancel.png", 50, 50);
+					selectButton[1].Init (mainMenuX + 110, 40, SelectIconCallback, 1);
+					selectButton[1].SetIcon ("Image/MapEditor/Block.png", 50, 50);
+					selectButton[2].Init (mainMenuX + 30, 120, SelectIconCallback, 2);
+					selectButton[2].SetIcon ("Image/MapEditor/Entry.png", 50, 50);
+					selectButton[3].Init (mainMenuX + 110, 120, SelectIconCallback, 3);
+					selectButton[3].SetIcon ("Image/MapEditor/Exit.png", 50, 50);
+					selectButton[4].Init (mainMenuX + 30, 200, SelectIconCallback, 4);
+					selectButton[4].SetIcon ("Image/MapEditor/CancelTurret.png", 50, 50);
+					selectButton[5].Init (mainMenuX + 110, 200, SelectIconCallback, 5);
+					selectButton[5].SetIcon ("Image/MapEditor/Turret 1.png", 50, 50);
+					selectButton[6].Init (mainMenuX + 30, 280, SelectIconCallback, 6);
+					selectButton[6].SetIcon ("Image/MapEditor/Turret 2.png", 50, 50);
+					selectButton[7].Init (mainMenuX + 110, 280, SelectIconCallback, 7);
+					selectButton[7].SetIcon ("Image/MapEditor/Turret 3.png", 50, 50);
+					selectButton[8].Init (mainMenuX + 30, 280, SelectIconCallback, 8);
+					selectButton[8].SetIcon ("Image/MapEditor/Turret 4.png", 50, 50);
+					selectButton[9].Init (mainMenuX + 110, 280, SelectIconCallback, 9);
+					selectButton[9].SetIcon ("Image/MapEditor/Turret 5.png", 50, 50);
+					selectButton[10].Init (mainMenuX + 30, 280, SelectIconCallback, 10);
+					selectButton[10].SetIcon ("Image/MapEditor/Turret 6.png", 50, 50);
+					selectButton[11].Init (mainMenuX + 110, 280, SelectIconCallback, 11);
+					selectButton[11].SetIcon ("Image/MapEditor/Turret 7.png", 50, 50);
+					selectButton[12].Init (mainMenuX + 30, 280, SelectIconCallback, 12);
+					selectButton[12].SetIcon ("Image/MapEditor/Turret 8.png", 50, 50);
+					selectButton[13].Init (mainMenuX + 110, 280, SelectIconCallback, 13);
+					selectButton[13].SetIcon ("Image/MapEditor/Turret 9.png", 50, 50);
+					selectButton[14].Init (mainMenuX + 30, 280, SelectIconCallback, 14);
+					selectButton[14].SetIcon ("Image/MapEditor/Turret 10.png", 50, 50);
+
+					
+					map.RenderField(true);
+					g_inputEngine.ResetWheel();
+				}
+				else {
+					if (textShow == true) {
+						if (textAlpha < 1) {
+							textAlpha += deltaTime * 0.005;
+							if (textAlpha > 1) textAlpha = 1;
+							textMenuPanel.SetAlpha(textAlpha);
+							closeTextButton.SetAlpha(textAlpha);
+							importTextButton.SetAlpha(textAlpha);
+							g_textArea.style.opacity = textAlpha;
+						}
+					}
+					else {
+						if (textAlpha > 0) {
+							textAlpha -= deltaTime * 0.005;
+							if (textAlpha < 0) {
+								textAlpha = 0;
+								g_textArea.style.visibility = "hidden";
+							}
+							textMenuPanel.SetAlpha(textAlpha);
+							closeTextButton.SetAlpha(textAlpha);
+							importTextButton.SetAlpha(textAlpha);
+							g_textArea.style.opacity = textAlpha;
+						}
+					}
+					
+					if (textShow == true) {
+						closeTextButton.Update (deltaTime);
+						importTextButton.Update (deltaTime);
+					}
+					else {
+						exportButton.Update (deltaTime);
+						for (var i=0; i<selectButton.length; i++) {
+							selectButton[i].Update (deltaTime);
+						}
+						
+						if (g_inputEngine.m_keyState[32] == 1) {
+							if (mainMenuX < -20) {
+								mainMenuX += deltaTime * 1;
+								if (mainMenuX > -20) mainMenuX = -20;
+								mainMenuPanel.SetPosition (mainMenuX, -20);
+								exportButton.SetPosition (mainMenuX + 35, 660);
+								for (var i=0; i<selectButton.length; i++) {
+									if (i%2 == 0) {
+										selectButton[i].SetPosition (mainMenuX + 30, ((i/2)>>0) * 80 + 10);
+									}
+									else {
+										selectButton[i].SetPosition (mainMenuX + 110, ((i/2)>>0) * 80 + 10);
+									}
+								}
+								
+							}
+						}
+						else if (g_inputEngine.m_keyState[32] == 0) {
+							if (mainMenuX > -210) {
+								mainMenuX -= deltaTime * 1;
+								if (mainMenuX < -210) mainMenuX = -210;
+								mainMenuPanel.SetPosition (mainMenuX, -20);
+								exportButton.SetPosition (mainMenuX + 35, 660);
+								for (var i=0; i<selectButton.length; i++) {
+									if (i%2 == 0) {
+										selectButton[i].SetPosition (mainMenuX + 30, ((i/2)>>0) * 80 + 10);
+									}
+									else {
+										selectButton[i].SetPosition (mainMenuX + 110, ((i/2)>>0) * 80 + 10);
+									}
+								}
+							}
+						}
+						
+						if (g_inputEngine.m_keyState[37] == 1) {
+							camera.x -= deltaTime * 0.8;
+							map.SetCamera(camera);
+						}
+						if (g_inputEngine.m_keyState[38] == 1) {
+							camera.y -= deltaTime * 0.8;
+							map.SetCamera(camera);
+						}
+						if (g_inputEngine.m_keyState[39] == 1) {
+							camera.x += deltaTime * 0.8;
+							map.SetCamera(camera);
+						}
+						if (g_inputEngine.m_keyState[40] == 1) {
+							camera.y += deltaTime * 0.8;
+							map.SetCamera(camera);
+						}
+						if (g_inputEngine.m_keyState[187] == 1) {
+							this.Zoom(-deltaTime * 0.6);
+						}
+						if (g_inputEngine.m_keyState[189] == 1) {
+							this.Zoom(deltaTime * 0.6);
+						}
+						
+						
+						
+						
+						
+						
+						
+						if (g_inputEngine.m_mouseX < mainMenuX + mainMenuPanel.m_w && g_inputEngine.m_mousePress == 1) {
+							
+						}
+						else {
+							if (g_inputEngine.m_keyState[18] == 0) {
+								var scale = camera.w / CANVAS_W;
+								var scaleMouseX = g_inputEngine.m_mouseX * scale;
+								var scaleMouseY = g_inputEngine.m_mouseY * scale;
+								var blockMouseX = scaleMouseX + camera.x;
+								var blockMouseY = scaleMouseY + camera.y;
+								var blockX = (blockMouseX / BATTLE_FIELD_BLOCK_SIZE) >> 0;
+								var blockY = (blockMouseY / BATTLE_FIELD_BLOCK_SIZE) >> 0;
+								
+								if (g_inputEngine.m_mousePress == 1) {
+									if (selecting < 4) {
+										if (map.block[blockX][blockY] != selecting) {
+											if (selecting >= 2 && blockX > 1 && blockX < map.blockWidth-1 && blockY > 1 && blockY < map.blockHeight-1) {
+												
+											}
+											else {
+												map.block[blockX][blockY] = selecting;
+												map.RenderField (true);
+											}
+										}
+									}
+									else if (selecting >= 4) {
+										var needToAdd = true;
+										for (var i=0; i<map.object.length; i++) {
+											if (map.object[i].x == blockX && map.object[i].y == blockY) {
+												if (selecting == 4) {
+													map.object.splice (i, 1);
+													map.RenderField (true);
+												}
+												else {
+													map.object[i].type = selecting - 4;
+													map.RenderField (true);
+												}
+												needToAdd = false;
+												break;
+											}
+										}
+
+										if (needToAdd && selecting > 4) {
+											var index = map.object.length;
+											map.object[index] = new TurretData();
+											map.object[index].x = blockX;
+											map.object[index].y = blockY;
+											map.object[index].type = selecting - 4;
+											map.RenderField (true);
+										}
+									}
+								}
+							}
+						}
+						
+						if (g_inputEngine.m_mousePress == 1 && g_inputEngine.m_keyState[18] == 1) {
+							if (mousePressing == false) {
+								anchorMouseX = g_inputEngine.m_mouseX;
+								anchorMouseY = g_inputEngine.m_mouseY;
+								anchorCameraX = camera.x;
+								anchorCameraY = camera.y;
+								mousePressing = true;
+							}
+							else {
+								var mapScale = camera.w / CANVAS_W;
+								var deltaX = anchorMouseX - g_inputEngine.m_mouseX;
+								var deltaY = anchorMouseY - g_inputEngine.m_mouseY;
+								camera.x = anchorCameraX + deltaX * mapScale;
+								camera.y = anchorCameraY + deltaY * mapScale;
+								map.SetCamera(camera);
+							}
+						}
+						else {
+							mousePressing = false;
+						}
+					
+					
+						// Zoom map using mouse wheel
+						var deltaWheel = g_inputEngine.m_mouseWheel;
+						g_inputEngine.ResetWheel();
+						this.Zoom (-deltaTime * deltaWheel * 4);
+					}
+				}
+			}
+			
+		
+			this.Draw = function () {
+				g_graphicEngine.DrawFast (g_context, backGroundImage, 0, 0);
+				map.Draw(g_context);
+				
+				if (init == true) {
+					mainMenuPanel.Draw (g_context);
+					exportButton.Draw (g_context);
+					
+					for (var i=0; i<selectButton.length; i++) {
+						selectButton[i].Draw (g_context);
+					}
+					
+					textMenuPanel.Draw (g_context);
+					importTextButton.Draw (g_context);
+					closeTextButton.Draw (g_context);
+				}
+			}
+			
+			var Export = function () {
+				textShow = true;
+				g_textArea.style.visibility = "visible";
+				g_textArea.style.opacity = 0;
+				g_textArea.value = map.Export();
+			}
+			
+			var CloseText = function() {
+				textShow = false;
+			}
+			
+			var Import = function () {
+				textShow = false;
+				map.Import(g_textArea.value);
+				map.RenderField (true);
+			}
+			
+			var SelectIconCallback = function (id) {
+				selecting = id;
+			}
+		}
+		
+		
+		var g_gsCreate = new GSCreate();
+		g_stateEngine.SwitchState (g_gsCreate, 0);
+	
+	</script>
+</body>
+</html>

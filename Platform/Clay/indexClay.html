@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+	<title>AI-Conflict Tower Defense</title>	
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<link rel="apple-touch-icon" href="image/Icon.png" />
+	<style>
+		body {
+			margin: 0;
+		}
+
+		canvas {
+			padding-left: 0;
+			padding-right: 0;
+			display: block;
+		}
+		
+		@font-face {
+			font-family: "Spartakus";
+			src: url('fonts/Spartakus.ttf') format('truetype');
+			src: local('☺'), 
+				url('fonts/Spartakus.woff') format('woff');
+		}
+		
+		@font-face {
+			font-family: "Nova";
+			src: url('fonts/Nova.ttf') format('truetype');
+			src: local('☺'), 
+				url('fonts/Nova.woff') format('woff');
+		}
+	</style>
+</head>
+
+<body>
+	<script type="text/javascript">
+	var Clay = Clay || {};
+	Clay.gameKey = "YOURGAMEKEY";
+	Clay.readyFunctions = [];
+	Clay.ready = function( fn ) {
+		Clay.readyFunctions.push( fn );
+	};
+	( function() {
+		var clay = document.createElement("script"); clay.async = true;
+		clay.src = ( "https:" == document.location.protocol ? "https://" : "http://" ) + "clay.io/api/api-payment.js"; 
+		var tag = document.getElementsByTagName("script")[0]; tag.parentNode.insertBefore(clay, tag);
+	} )();
+	</script>
+
+	<script>
+		var ROOT_FOLDER = "";
+		var PLATFORM = "CLAY";
+		var ENABLE_ADS = true;
+		
+		var buyingPacket;
+		var pay;
+		function PurchaseUpgradePack (index) {
+			buyingPacket = index;
+			if (pay == null) pay = new Clay.Payment();
+			
+			var id;
+			if (buyingPacket == 1) id = 633;
+			else if (buyingPacket == 2) id = 634;
+			else if (buyingPacket == 3) id = 635;
+			else if (buyingPacket == 4) id = 636;
+			
+			pay.addItem( { id: id }, function() {
+				pay.checkout( function( response ) {
+					if (response.completed) {
+						g_profile.upgradePoint = g_profile.upgradePoint >> 0;
+						
+						if (buyingPacket == 1) g_profile.upgradePoint += 10;
+						else if (buyingPacket == 2) g_profile.upgradePoint += 20;
+						else if (buyingPacket == 3) g_profile.upgradePoint += 50;
+						else if (buyingPacket == 4) g_profile.upgradePoint += 100;
+						
+						g_gsShop.PurchaseSuccess();
+					}
+				};
+			} );
+		}
+	</script>
+	<script src="Source/Ads.js"></script>
+	
+	<script src="Source/Engine/GraphicEngine.js"></script>
+	<script src="Source/Engine/InputEngine.js"></script>
+	<script src="Source/Engine/ParticleEngine.js"></script>
+	<script src="Source/Engine/StateEngine.js"></script>
+	
+	<script src="Source/UI/GlassPanel.js"></script>
+	<script src="Source/UI/GlassBar.js"></script>
+	<script src="Source/UI/GlassMenu.js"></script>
+	<script src="Source/UI/GlassButton.js"></script>
+	<script src="Source/UI/GlassSquareButton.js"></script>
+	<script src="Source/UI/GlassScroll.js"></script>
+	<script src="Source/UI/IconButton.js"></script>
+	<script src="Source/UI/TurretButton.js"></script>
+	
+	<script src="Source/Localization/LocalizationEN.js"></script>
+
+	<script src="Source/ActionPhase/AIChecker.js"></script>
+	<script src="Source/ActionPhase/PathDisplay.js"></script>
+	<script src="Source/ActionPhase/ParticleDef.js"></script>
+	
+	<script src="Source/ActionPhase/Explosion/GatlingExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/SmallExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/SmallExplosionWithDebris.js"></script>
+	<script src="Source/ActionPhase/Explosion/FireExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/ShockWaveExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/StaticExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/BulletDestroyExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/StaticDestroyExplosion.js"></script>
+	
+	<script src="Source/ActionPhase/Projectile/AcidProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/CannonProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/GatlingProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/LaserProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/MissileProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/ShockWaveProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/GaussProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/PenetrationProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/LiquidExplosiveProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/SuperLaserProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/StaticProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/NullMissileProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/SlowShockWaveProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/EncaseStaticProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/DisintegrateBeam.js"></script>
+	
+	
+	<script src="Source/ActionPhase/Turret/AcidTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/CannonTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/GatlingTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/LaserTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/MissileTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/ShockWaveTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/GaussTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/StaticTurret.js"></script>
+	
+	<script src="Source/ActionPhase/Building/AmmunitionFactory.js"></script>
+	<script src="Source/ActionPhase/Building/EnergyFactory.js"></script>
+	
+	
+	<script src="Source/ActionPhase/Enemy/Fighter.js"></script>
+	<script src="Source/ActionPhase/Enemy/Corvette.js"></script>
+	<script src="Source/ActionPhase/Enemy/Frigate.js"></script>
+	<script src="Source/ActionPhase/Enemy/Cruiser.js"></script>
+	
+	<script src="Source/ActionPhase/Map.js"></script>
+	<script src="Source/ActionPhase/Battle.js"></script>
+	
+	
+	<script src="Source/State/GSLoader.js"></script>
+	<script src="Source/State/GSMainMenu.js"></script>
+	<script src="Source/State/GSActionPhase.js"></script>
+	<script src="Source/State/GSUpgrade.js"></script>
+	<script src="Source/State/GSInfo.js"></script>
+	<script src="Source/State/GSOption.js"></script>
+	<script src="Source/State/GSSelectMission.js"></script>
+	<script src="Source/State/GSShop.js"></script>
+	<script src="Source/State/GSInGameMenu.js"></script>
+	<script src="Source/State/GSWait.js"></script>
+	<script src="Source/State/GSCredit.js"></script>
+	<script src="Source/State/GSTutorial.js"></script>
+	
+	
+	<script src="Source/GameData.js"></script>
+	<script src="Source/SoundManager.js"></script>
+	<script src="Source/Profile.js"></script>
+	<script src="Source/MessageManager.js"></script>
+	
+	<script src="Source/Sound/UISoundNode.js"></script>
+	<script src="Source/Sound/ActionSingleSoundNode.js"></script>
+	<script src="Source/Sound/ActionLoopSoundNode.js"></script>
+	<script src="Source/Sound/ActionRandomSoundNode.js"></script>
+	<script src="Source/Sound/MusicNode.js"></script>
+	
+	<script src="Source/ImageDef.js"></script>
+	<script src="Source/UpgradeDef.js"></script>
+	<script src="Source/MissionDef.js"></script>
+	
+	<script src="Source/Core.js"></script>
+	<script src="Source/Main.js"></script>
+	
+	<script src="Source/SoundDef.js"></script>
+</body>
+</html>

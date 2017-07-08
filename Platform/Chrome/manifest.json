@@ -1,0 +1,7 @@
+{
+	"manifest_version": 2,
+	"name": "AI-Conflict",
+	"version": "0.0.0.1",
+	"default_locale": "en",
+	"description": "This is a sci-fi Tower Defense game, but it has a new feature that make it not the same as other Tower Defense game. The player can setup the Tower AI behaviour in a very detail way. Using up to 6 AI condition/action slot, which can combine with each other like 'AND', 'OR', the player can utilize each tower strong point, while limit their weak point."
+}

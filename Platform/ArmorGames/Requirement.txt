@@ -1,0 +1,37 @@
+Let me know if you have any questions.
+
+Add Armor Game Intro Animation & Logo on Main Menu
+http://armorgames.com/misc/downloads/armorassets.zip
+Have the game go directly to the Armor splash screen after the preloader.  Remove any PLAY buttons [unless using the ABS]. Please make the Armor splash screen a clickable link.
+Remove 3rd party API's and any tracking bots
+ie. Mochi, Newgrounds, GamerSafe, HeyZap, etc.
+If the game has a Hi-Score Board, Make the High Scores local to the player
+If High Scores are a crucial component of the game, please implement our AGI and ask us for your unique Dev and Game Keys.
+http://armor.ag/AGIv2
+Only AS3 Compatible 
+Add the following links to the game (Main Menu)
+Play More Games (Link to http://armor.ag/MoreGames)
+Like Us! (Link to http://www.facebook.com/ArmorGames)
+When adding links back to ArmorGames (logos, intro animation, buttons, etc) please use this URL
+http://armor.ag/MoreGames
+Pre-loader ads
+For primary licenses, our CPMStar code is: 41ZD0803B12 [if needed] (on all sites but Armor)
+For primary licenses, please include the ABS on the preloader: http://armor.ag/ABS [if needed] (on all sites)
+For sitelocks, no ads are allowed, please remove any PLAY button after the preloader
+When sitelocking (if needed), include ArmorGames.com and all sub-domains:
+http://games.armorgames.com
+http://preview.armorgames.com
+http://cache.armorgames.com
+http://cdn.armorgames.com
+http://gamemedia.armorgames.com
+http://files.armorgames.com
+http://*.armorgames.com
+Provide us with a W-8 or W-9 tax form, if we don’t already have one on file for you
+W8 (outside the US): http://www.irs.gov/pub/irs-pdf/fw8ben.pdf
+If you are in latin/south america (and possibly other places as well), chances are we have to withhold 30% for taxes
+W9 (inside the US): http://www.irs.gov/pub/irs-pdf/fw9.pdf
+Provide payment information:  we pay via Paypal or Wire Transfer only
+Request access to the developers back-end through http://developers.armorgames.com if you have never added a game to Armor before.  If you have a game live on Armor, you will already have access.
+Tell Tasselfoot the username you requested access with and he’ll approve it. 
+Upload the game through http://developers.armorgames.com and creative assets on Upload Creative Assets.  Once you’re sure everything works, send the game for review.
+By submitting your game to Armor, you are granting them a worldwide non-exclusive license to host the submitted game.

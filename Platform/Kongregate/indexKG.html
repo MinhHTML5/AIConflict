@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+	<title>AI-Conflict Tower Defense</title>	
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link rel="apple-touch-icon" href="images/icon.png" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<style>
+		body {
+			margin: 0;
+		}
+
+		canvas {
+			padding-left: 0;
+			padding-right: 0;
+			display: block;
+		}
+		
+		@font-face {
+			font-family: "Spartakus";
+			src: url('fonts/Spartakus.ttf') format('truetype');
+			src: local('☺'), 
+				url('fonts/Spartakus.woff') format('woff');
+		}
+		
+		@font-face {
+			font-family: "Nova";
+			src: url('fonts/Nova.ttf') format('truetype');
+			src: local('☺'), 
+				url('fonts/Nova.woff') format('woff');
+		}
+	</style>
+</head>
+
+<body>
+	<script src="http://www.kongregate.com/javascripts/kongregate_api.js"></script>
+	<script>
+		var ROOT_FOLDER = "";
+		var PLATFORM = "KONGREGATE";
+		var ENABLE_ADS = false;
+		
+		var kongregate = null;
+		var KG_isGuest = true;
+		var KG_userID = 0;
+		var KG_userName = 0;
+		var KG_authToken = 0;
+		
+		function OnLoadCompleted(){
+			kongregate = kongregateAPI.getAPI();
+			KG_isGuest = kongregate.services.isGuest();
+			
+			if (KG_isGuest == false) {
+				KG_userID = kongregate.services.getUserId();
+				KG_userName = kongregate.services.getUsername();
+				KG_authToken = kongregate.services.getGameAuthToken();
+				g_profile.cred = "kg:" + KG_userID;
+				PrecheckUserInventory();
+			}
+			else {
+				kongregate.services.showRegistrationBox();
+				PollUserIDChange();
+			}
+		}
+		kongregateAPI.loadAPI(OnLoadCompleted);
+		
+		
+		function PollUserIDChange(){
+			if (KG_isGuest == true) {
+				if (kongregate.services.isGuest() == false) {
+					KG_isGuest = false;
+					KG_userID = kongregate.services.getUserId();
+					KG_userName = kongregate.services.getUsername();
+					KG_authToken = kongregate.services.getGameAuthToken();
+					
+					g_profile.cred = "kg:" + KG_userID;
+					PrecheckUserInventory();
+				}
+				else {
+					setTimeout (PollUserIDChange, 5000);
+				}
+			}
+		}
+		
+		function PrecheckUserInventory(){
+			var request = new XMLHttpRequest();
+			var url = "//ai-conflict.com/Kongregate/PayCallback.php?user_id=" + KG_userID + "&user_auth=" + KG_authToken + "&t=" + new Date().getTime();
+			request.open("GET", url, true);
+			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			request.onload = function(e) {
+				if (request.readyState == 4) {
+					setTimeout (DoneCheckingUserInventory, 5000);
+				}
+			};
+			request.send();
+		}
+		function DoneCheckingUserInventory(){
+			if (g_profile != null) {
+				g_profile.Load ();
+			}
+			else {
+				setTimeout (DoneCheckingUserInventory, 5000);
+			}
+		}
+		
+		
+		
+		
+		
+		
+		function SubmitInit() {
+			kongregate.stats.submit("initialized", 1);
+		}
+		function SubmitProgress(progress) {
+			kongregate.stats.submit("progress", progress);
+		}
+		
+		
+		
+		
+		
+		var buyingPacket;
+		function PurchaseUpgradePack (index) {
+			g_profile.upgradePoint = g_profile.upgradePoint >> 0;
+			
+			var items;
+			if (index == 1) {
+				items = ["small_pack"];
+			}
+			else if (index == 2) {
+				items = ["medium_pack"];
+			}
+			else if (index == 3) {
+				items = ["large_pack"];
+			}
+			else if (index == 4) {
+				items = ["complete_pack"];
+			}
+			kongregate.mtx.purchaseItems(items, PurchaseCallback);
+		}
+		
+		function PurchaseCallback(paymentData) {
+			if (paymentData.success) {
+				var request = new XMLHttpRequest();
+				var url = "//ai-conflict.com/Kongregate/PayCallback.php?user_id=" + KG_userID + "&user_auth=" + KG_authToken + "&t=" + new Date().getTime();
+				request.open("GET", url, true);
+				request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				request.onload = function(e) {
+					if (request.readyState == 4) {
+						if (request.status == 200) {
+							setTimeout (PollPaymentUpdate, 5000);
+						}
+						else {
+							PopSubState();
+						}
+					}
+				};
+				request.send();
+			}
+			else {
+				PopSubState();
+			}
+		}
+		
+		var oldUpgradePoint;
+		function PollPaymentUpdate () {
+			oldUpgradePoint = g_profile.upgradePoint;
+			g_profile.Load (PollPaymentUpdateCallback);
+		}
+		function PollPaymentUpdateCallback() {
+			if (oldUpgradePoint != g_profile.upgradePoint) {
+				g_gsShop.PurchaseSuccess();
+			}
+			else {
+				PrecheckUserInventory();
+			}
+		}
+	</script>
+	
+	 
+	<script src="Source/Ads.js"></script>
+	
+	<script src="Source/Engine/GraphicEngine.js"></script>
+	<script src="Source/Engine/InputEngine.js"></script>
+	<script src="Source/Engine/ParticleEngine.js"></script>
+	<script src="Source/Engine/StateEngine.js"></script>
+	
+	<script src="Source/UI/GlassPanel.js"></script>
+	<script src="Source/UI/GlassBar.js"></script>
+	<script src="Source/UI/GlassMenu.js"></script>
+	<script src="Source/UI/GlassButton.js"></script>
+	<script src="Source/UI/GlassSquareButton.js"></script>
+	<script src="Source/UI/GlassScroll.js"></script>
+	<script src="Source/UI/IconButton.js"></script>
+	<script src="Source/UI/TurretButton.js"></script>
+	
+	<script src="Source/Localization/LocalizationEN.js"></script>
+
+	<script src="Source/ActionPhase/AIChecker.js"></script>
+	<script src="Source/ActionPhase/PathDisplay.js"></script>
+	<script src="Source/ActionPhase/ParticleDef.js"></script>
+	
+	<script src="Source/ActionPhase/Explosion/GatlingExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/SmallExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/SmallExplosionWithDebris.js"></script>
+	<script src="Source/ActionPhase/Explosion/FireExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/ShockWaveExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/StaticExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/BulletDestroyExplosion.js"></script>
+	<script src="Source/ActionPhase/Explosion/StaticDestroyExplosion.js"></script>
+	
+	<script src="Source/ActionPhase/Projectile/AcidProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/CannonProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/GatlingProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/LaserProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/MissileProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/ShockWaveProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/GaussProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/PenetrationProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/LiquidExplosiveProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/SuperLaserProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/StaticProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/NullMissileProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/SlowShockWaveProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/EncaseStaticProjectile.js"></script>
+	<script src="Source/ActionPhase/Projectile/DisintegrateBeam.js"></script>
+	
+	
+	<script src="Source/ActionPhase/Turret/AcidTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/CannonTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/GatlingTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/LaserTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/MissileTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/ShockWaveTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/GaussTurret.js"></script>
+	<script src="Source/ActionPhase/Turret/StaticTurret.js"></script>
+	
+	<script src="Source/ActionPhase/Building/AmmunitionFactory.js"></script>
+	<script src="Source/ActionPhase/Building/EnergyFactory.js"></script>
+	
+	
+	<script src="Source/ActionPhase/Enemy/Fighter.js"></script>
+	<script src="Source/ActionPhase/Enemy/Corvette.js"></script>
+	<script src="Source/ActionPhase/Enemy/Frigate.js"></script>
+	<script src="Source/ActionPhase/Enemy/Cruiser.js"></script>
+	
+	<script src="Source/ActionPhase/Map.js"></script>
+	<script src="Source/ActionPhase/Battle.js"></script>
+	
+	
+	<script src="Source/State/GSLoader.js"></script>
+	<script src="Source/State/GSMainMenu.js"></script>
+	<script src="Source/State/GSActionPhase.js"></script>
+	<script src="Source/State/GSUpgrade.js"></script>
+	<script src="Source/State/GSInfo.js"></script>
+	<script src="Source/State/GSOption.js"></script>
+	<script src="Source/State/GSSelectMission.js"></script>
+	<script src="Source/State/GSShop.js"></script>
+	<script src="Source/State/GSInGameMenu.js"></script>
+	<script src="Source/State/GSWait.js"></script>
+	<script src="Source/State/GSCredit.js"></script>
+	<script src="Source/State/GSTutorial.js"></script>
+	
+	
+	<script src="Source/GameData.js"></script>
+	<script src="Source/SoundManager.js"></script>
+	<script src="Source/Profile.js"></script>
+	<script src="Source/MessageManager.js"></script>
+	
+	<script src="Source/Sound/UISoundNode.js"></script>
+	<script src="Source/Sound/ActionSingleSoundNode.js"></script>
+	<script src="Source/Sound/ActionLoopSoundNode.js"></script>
+	<script src="Source/Sound/ActionRandomSoundNode.js"></script>
+	<script src="Source/Sound/MusicNode.js"></script>
+	
+	<script src="Source/ImageDef.js"></script>
+	<script src="Source/UpgradeDef.js"></script>
+	<script src="Source/MissionDef.js"></script>
+	
+	<script src="Source/Core.js"></script>
+	<script src="Source/Main.js"></script>
+	
+	<script src="Source/SoundDef.js"></script>
+</body>
+</html>

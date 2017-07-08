@@ -1,0 +1,8 @@
+There we go, that's all fine and working now!
+
+There is still just one last thing, and then I'm good to approve the game for publishing! For a user that isn't logged in, the main menu of the page should have a sign in/register button that launches the registration popup. The game should then acknowledge that the user is signed in, and show their appropriate progress. 
+
+Once that's complete, the next thing we'd need from you is a few assets so we can run ads for the game on the site. They would be 2 icons, one at 66x66 and another at 93x74, as well as an 8-12 word description of the game.
+
+Thanks,
+~Matt
